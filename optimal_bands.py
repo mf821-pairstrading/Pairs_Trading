@@ -5,7 +5,7 @@
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-
+import csv
 
 def c(n):
     df = pd.read_csv('data.csv', usecols=range(8*n - 6, 8*n)).dropna()
@@ -50,8 +50,6 @@ def HPDE(T,sigma,keppa,theta,smin,smax,Nt,Ns,c):
             H[j][i] = h2[j]
         band.append(min(h3) + c)
     list.reverse(band)
-    plt.plot(band)
-    plt.show()
     r = [H,band]        
     return r
 
@@ -92,40 +90,42 @@ def GPDE(T,sigma,keppa,theta,smin, smax, Nt,Ns,c,H):
         a = min(h3)
         band.append(a[1]-a[0]-c)
     list.reverse(band)
-    plt.plot(band)
-    plt.show()
     r = [G,band] 
     return r 
 
 
-for n in range(7):
+for n in range(1):
     
     sigma = [3.541689226183422, 3.311109421758028, 2.3639786461316663, 2.6766354554911476, 3.4596600694045962, 7.293134132042836, 3.261049714507078]
     
     kappa = pd.read_csv('coi_drifts.csv').iloc[n, 1]
     theta = pd.read_csv('coi_thetas_solveu_3.csv').iloc[n, 1] 
     
-    r = HPDE(1,sigma[n],kappa,theta,theta-10*sigma[n],theta+10*sigma[n],3900,1200,c(n+1))
+    r = HPDE(1,sigma[n],kappa,theta,theta-10*sigma[n],theta+10*sigma[n],39000,3000,c(n+1))
     H = r[0]
     band1 = r[1]
-    r2 = GPDE(1,sigma[n],kappa,theta,theta-10*sigma[n],theta+10*sigma[n],3900,1200,c(n+1),H)
+    r2 = GPDE(1,sigma[n],kappa,theta,theta-10*sigma[n],theta+10*sigma[n],39000,3000,c(n+1),H)
     G = r2[0]
     band2 = r2[1]
 
+    plt.plot(band1)
+    plt.plot(band2)
+    plt.legend(['Exiting Band', 'Entering Band'])
+    plt.show()    
 
     exitband = []
     enterband = []
-    for i in [x*10 for x in range(390)]:
+    for i in [x*100 for x in range(390)]:
         exitband.append(band1[i])
         enterband.append(band2[i])
     
 
-#    csvData = [[x, y] for x, y in zip(enterband, exitband)]
-#    with open('optimal_bands_'+str(n+1)+'.csv', 'w') as csvFile:
-#        writer = csv.writer(csvFile)
-#        writer.writerows(csvData)
-#    
-#    csvFile.close()
+    csvData = [[x, y] for x, y in zip(enterband, exitband)]
+    with open('optimal_bands_'+str(n+1)+'.csv', 'w') as csvFile:
+        writer = csv.writer(csvFile)
+        writer.writerows(csvData)
+    
+    csvFile.close()
 
 
 #print(H[:,-1])
